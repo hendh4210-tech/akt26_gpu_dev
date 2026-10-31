@@ -14,7 +14,13 @@
 // Column-major storage: A(i,j) = A[j*m + i]
 __global__ void ger_kernel(int m, int n, float alpha, const float* x, const float* y, float* A)
 {
-    // TODO: write your CUDA kernel here
+    const size_t idx = (size_t)blockIdx.x * blockDim.x + threadIdx.x;
+    const size_t total = (size_t)m * n;
+    if (idx < total) {
+        const int row = (int)(idx % m);
+        const int col = (int)(idx / m);
+        A[idx] += alpha * x[row] * y[col];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,8 +113,8 @@ int main(int argc, char** argv)
 
     // n1000: configure your kernel here
     // TODO: the configuration below is a default that you must change
-    dim3 block(16, 16, 1);
-    dim3 grid( 1, 1, 1);
+    dim3 block(256, 1, 1);
+    dim3 grid((unsigned int)((matrix_size + block.x - 1) / block.x), 1, 1);
     // end of TODO: kernel configuration
 
     cudaEvent_t start, stop;
